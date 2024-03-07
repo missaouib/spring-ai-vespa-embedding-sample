@@ -4,25 +4,23 @@ package com.pehrs.spring.ai.rss;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.List;
-import java.util.Stack;
-import java.util.stream.Collectors;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.xml.sax.SAXException;
-import reactor.netty.http.client.HttpClient;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Stack;
+import java.util.stream.Collectors;
 
 public class RssXmlAiDocumentReader implements ItemReader<Document> {
 
@@ -35,12 +33,8 @@ public class RssXmlAiDocumentReader implements ItemReader<Document> {
     this.rssUrls = new Stack();
     this.rssUrls.addAll(rssUrls);
     this.xmlBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-    this.webClient = WebClient.builder()
-        .clientConnector(new ReactorClientHttpConnector(
-            HttpClient.create().followRedirect(true)
-        ))
-        .exchangeStrategies(ExchangeStrategies.withDefaults())
-        .build();
+
+    this.webClient = webClient();
   }
 
   @Override
@@ -118,5 +112,15 @@ public class RssXmlAiDocumentReader implements ItemReader<Document> {
     );
 
     return itemUrls;
+  }
+
+  public WebClient webClient() {
+    final int size = 16 * 1024 * 1024;
+    final ExchangeStrategies strategies = ExchangeStrategies.builder()
+            .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(size))
+            .build();
+    return WebClient.builder()
+            .exchangeStrategies(strategies)
+            .build();
   }
 }
