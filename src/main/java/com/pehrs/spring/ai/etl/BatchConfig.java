@@ -26,7 +26,7 @@ public class BatchConfig  {
   public ItemReader<Document> reader() throws ParserConfigurationException {
 
     List<String> rssFeeds = List.of(
-        "http://www.svt.se/nyheter/rss.xml"
+        "https://www.latimes.com/world/rss2.0.xml"
     );
     String rssFeedsProp = System.getProperty("rss.feeds");
     if(rssFeedsProp != null) {
